@@ -3,8 +3,8 @@ const todo = document.querySelector("#todo-list");
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
-  console.log(event.target[0].value);
   const todoItem = event.target[0].value;
+  console.log(todoItem);
 
   const opts = {
     method: "POST",
@@ -12,16 +12,15 @@ form.addEventListener("submit", (event) => {
     body: JSON.stringify({ title: todoItem, completed: false }),
   };
 
-  fetch("https://localhost:3000/todos", opts)
+  fetch(`http://localhost:3000/todos`, opts)
     .then((res) => res.json())
     .then(() => {
       const listItem = document.createElement("li");
-      listItem.innerText = todoItem;
+      listItem.innerText = event.target[0].value;
       todo.append(listItem);
+      updateTodoList();
     });
-
   form.reset();
-  updateTodoList();
 });
 
 function complete(id) {
@@ -44,15 +43,28 @@ function updateTodoList() {
     .then((res) => res.json())
     .then((data) => {
       data.forEach((el) => {
-        let listItem = document.createElement("li");
-        listItem.innerText = el.title;
-        listItem.addEventListener("click", () => {
+        const listItem = `<div class='list-item-button' >
+        <li class='list-items' id='list-item-${el.id}' class=false >${el.title}</li>
+        <button class='todo-button' id='list-button-${el.id}' >Delete todo item</button>
+        </div>`;
+
+        todo.insertAdjacentHTML("afterbegin", listItem);
+
+        const todoItem = document.getElementById(`list-item-${el.id}`);
+        todoItem.addEventListener("click", () => {
           complete(el.id);
         });
         if (el.completed === true) {
-          listItem.setAttribute("class", "completed");
+          todoItem.setAttribute("class", "completed");
         }
-        todo.append(listItem);
+
+        const itemButton = document.getElementById(`list-button-${el.id}`);
+        itemButton.addEventListener("click", () => {
+          fetch(`http://localhost:3000/todos/${el.id}`, {
+            method: "DELETE",
+          });
+          updateTodoList();
+        });
       });
     });
 }
